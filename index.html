@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZenHold 禪定資產 · 美股與加密貨幣靜心追蹤器</title>
+  
+  <!-- 引入 Google Fonts 典雅字體 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- 禪意樣式表 (素白墨韻 Sumi & Washi Zen Style) -->
+  <link rel="stylesheet" href="css/zen-theme.css">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- 頂部導航與品牌標題 -->
+    <header class="zen-header">
+      <div class="brand-section">
+        <h1 class="brand-title">
+          <span class="brand-logo-icon">禪</span>
+          ZenHold
+        </h1>
+        <span class="brand-subtitle">美股 · 加密貨幣 靜心追蹤器</span>
+      </div>
+
+      <div class="header-actions">
+        <button id="btnOpenDataModal" class="btn-zen-outline" title="備份資料與設定">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          資料與設定
+        </button>
+        <button id="btnRefreshAll" class="btn-zen-outline" title="立即同步即時報價">
+          <svg id="refreshIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          即時刷新
+        </button>
+        <button id="btnOpenAddModal" class="btn-zen">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          新增標的
+        </button>
+      </div>
+    </header>
+
+    <!-- 美股市場狀態即時提醒列 -->
+    <section class="market-status-bar">
+      <div class="market-status-left">
+        <div id="marketStatusBadge" class="status-indicator status-closed">
+          <span class="status-dot"></span>
+          <span id="marketStatusText">載入市場狀態中...</span>
+        </div>
+        <div class="market-clock">
+          <span>美東時間：<strong id="easternTimeDisplay" class="et-time">--:--:-- ET</strong></span>
+          <span style="color:var(--ink-300);">|</span>
+          <span id="marketNextEvent" style="font-size:12px; color:var(--ink-500);">計算開閉盤中...</span>
+        </div>
+      </div>
+      <div class="market-status-right">
+        <span class="crypto-always-tag">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          加密貨幣 24/7 全天候運作
+        </span>
+      </div>
+    </section>
+
+    <!-- 靜心定性 · 禪語心齋 金句提醒卡片 -->
+    <section class="zen-quote-card">
+      <div class="quote-body">
+        <span class="quote-tag">靜心定性</span>
+        <blockquote id="zenQuoteText" class="quote-content">
+          「心若止水，波瀾不驚；市場喧囂皆過客，靜觀雲起定風波。」
+        </blockquote>
+        <span id="zenQuoteAuthor" style="font-size:12px; color:var(--ink-500); font-family:var(--font-serif); white-space:nowrap;">—— 禪宗定心</span>
+      </div>
+      <button id="btnRefreshQuote" class="btn-refresh-quote" title="點擊換一句定心箴言">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        隨喜換一句
+      </button>
+    </section>
+
+    <!-- 資產總覽儀表板 (Dashboard) -->
+    <section class="dashboard-grid">
+      <div class="metric-card">
+        <div class="metric-label">
+          <span>總資產現值 (USD)</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-300)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v12M17 10H9.5a2.5 2.5 0 0 0 0 5H15a2.5 2.5 0 0 1 0 5H7"></path></svg>
+        </div>
+        <div id="totalNetWorth" class="metric-value">$0.00</div>
+        <div class="metric-subvalue" style="color:var(--ink-500);">
+          <span>投入成本：</span>
+          <strong id="totalCostBasis" style="color:var(--ink-700);">$0.00</strong>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-label">
+          <span>累積未實現損益</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-300)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        </div>
+        <div id="totalPnLDisplay" class="metric-value pnl-neutral">$0.00</div>
+        <div id="totalRoiDisplay" class="metric-subvalue pnl-neutral">報酬率：+0.00%</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-label">
+          <span>今日市場波動 (24H)</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-300)" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+        </div>
+        <div id="dayChangeDisplay" class="metric-value pnl-neutral">$0.00</div>
+        <div id="dayChangePctDisplay" class="metric-subvalue pnl-neutral">漲跌幅：0.00%</div>
+      </div>
+    </section>
+
+    <!-- 資產配置圓餅圖與大類概覽 -->
+    <section class="analytics-section">
+      
+      <!-- 圓餅圖/甜甜圈圖 -->
+      <div class="chart-card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+            資產配置佔比
+          </h2>
+          <div class="chart-toggle-group">
+            <button class="chart-toggle-btn active" data-mode="category">大類佔比</button>
+            <button class="chart-toggle-btn" data-mode="holdings">標的佔比</button>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <canvas id="portfolioCanvas" width="240" height="240"></canvas>
+          <div class="chart-center-text">
+            <div id="chartCenterLabel" class="chart-center-label">總資產配置</div>
+            <div id="chartCenterVal" class="chart-center-val">$0</div>
+          </div>
+        </div>
+
+        <div id="chartLegendList" class="legend-list">
+          <!-- 動態渲染圖例 -->
+        </div>
+      </div>
+
+      <!-- 三大資產大類概況 -->
+      <div class="breakdown-card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            核心資產分佈
+          </h2>
+        </div>
+
+        <div class="category-summary-grid">
+          <div class="category-mini-card cat-crypto">
+            <div class="cat-title">🪙 加密貨幣 (Crypto)</div>
+            <div id="catCryptoVal" class="cat-val">$0.00</div>
+            <div id="catCryptoSub" class="cat-sub">損益 +0.0% · 佔比 0%</div>
+          </div>
+
+          <div class="category-mini-card cat-stock">
+            <div class="cat-title">📈 美股個股 (Stocks)</div>
+            <div id="catStockVal" class="cat-val">$0.00</div>
+            <div id="catStockSub" class="cat-sub">損益 +0.0% · 佔比 0%</div>
+          </div>
+
+          <div class="category-mini-card cat-etf">
+            <div class="cat-title">🌐 美股 ETF (ETFs)</div>
+            <div id="catEtfVal" class="cat-val">$0.00</div>
+            <div id="catEtfSub" class="cat-sub">損益 +0.0% · 佔比 0%</div>
+          </div>
+        </div>
+
+        <!-- 禪意持倉提示 -->
+        <div style="background-color:var(--bg-canvas); border:1px solid var(--card-border); border-radius:var(--radius-md); padding:16px; margin-top:20px; font-size:13px; color:var(--ink-700); line-height:1.7;">
+          <strong style="color:var(--ink-900);">🎋 均衡配置理念：</strong>
+          <ul style="padding-left:18px; margin-top:6px; color:var(--ink-500);">
+            <li><strong>比特幣 / 加密貨幣</strong>：非對稱成長與抗通膨潛力，建議控制在可承受波動之適度比例。</li>
+            <li><strong>美股寬基 ETF (如 VOO/QQQ)</strong>：隨全球頂尖生產力長期穩健複合成長，作為資產壓艙石。</li>
+            <li><strong>美股核心龍頭個股</strong>：聚焦具備高護城河與充沛現金流之優質企業。</li>
+          </ul>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 持倉明細表格區塊 -->
+    <section class="holdings-section">
+      <div class="holdings-header-row">
+        <div class="filter-tabs">
+          <button class="tab-btn active" data-tab="all">全部資產</button>
+          <button class="tab-btn" data-tab="crypto">加密貨幣</button>
+          <button class="tab-btn" data-tab="stock">美股個股</button>
+          <button class="tab-btn" data-tab="etf">美股 ETF</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="zen-table">
+          <thead>
+            <tr>
+              <th>標的資產</th>
+              <th>持有數量</th>
+              <th>買入均價</th>
+              <th>即時現價</th>
+              <th>目前市值</th>
+              <th>未實現損益</th>
+              <th>資產佔比</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="holdingsTableBody">
+            <!-- 動態渲染持倉列 -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 頁尾 -->
+    <footer class="zen-footer">
+      <div class="footer-quote">
+        「靜水流深，持盈保泰。心安，則萬物自適。」
+      </div>
+      <div>
+        <span>ZenHold 純前端本機儲存 · 資料無上傳，安全無憂</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 模態視窗 1：新增 / 編輯持倉 (Modal) -->
+  <!-- ========================================================================= -->
+  <div id="modalHolding" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalHoldingTitle" class="modal-title">新增標的持倉</h3>
+        <button class="icon-btn btn-close-modal" title="關閉">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <form id="formHolding">
+        <div class="modal-body">
+          <input type="hidden" id="inputHoldingId">
+
+          <!-- 快速點選常用熱門標的 -->
+          <div class="form-group">
+            <label class="form-label">常用標的推薦：</label>
+            <div class="quick-suggest-pills">
+              <button type="button" class="suggest-pill" data-symbol="BTC" data-category="crypto" data-name="Bitcoin (比特幣)">BTC</button>
+              <button type="button" class="suggest-pill" data-symbol="ETH" data-category="crypto" data-name="Ethereum (以太幣)">ETH</button>
+              <button type="button" class="suggest-pill" data-symbol="SOL" data-category="crypto" data-name="Solana">SOL</button>
+              <button type="button" class="suggest-pill" data-symbol="VOO" data-category="etf" data-name="Vanguard S&P 500 ETF">VOO</button>
+              <button type="button" class="suggest-pill" data-symbol="QQQ" data-category="etf" data-name="Invesco QQQ Trust">QQQ</button>
+              <button type="button" class="suggest-pill" data-symbol="NVDA" data-category="stock" data-name="NVIDIA Corporation">NVDA</button>
+              <button type="button" class="suggest-pill" data-symbol="AAPL" data-category="stock" data-name="Apple Inc.">AAPL</button>
+              <button type="button" class="suggest-pill" data-symbol="TSLA" data-category="stock" data-name="Tesla Inc.">TSLA</button>
+              <button type="button" class="suggest-pill" data-symbol="MSFT" data-category="stock" data-name="Microsoft">MSFT</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="selectCategory">資產類別 *</label>
+            <select id="selectCategory" class="form-select" required>
+              <option value="crypto">🪙 加密貨幣 (Crypto)</option>
+              <option value="stock">📈 美股個股 (US Stock)</option>
+              <option value="etf">🌐 美股 ETF (US ETF)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inputSymbol">標的代碼 (Symbol / Ticker) *</label>
+            <input type="text" id="inputSymbol" class="form-input" placeholder="例如：BTC, VOO, AAPL, NVDA" required>
+            <div class="form-helper">加密貨幣請填 BTC, ETH 等；美股請填交易代碼。</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inputName">標的名稱 / 說明</label>
+            <input type="text" id="inputName" class="form-input" placeholder="例如：Bitcoin, Vanguard 500">
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label class="form-label" for="inputShares">持有數量 *</label>
+              <input type="number" step="any" min="0.00000001" id="inputShares" class="form-input" placeholder="例如：0.5 或 10" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="inputCostPrice">買入平均成本 (USD) *</label>
+              <input type="number" step="any" min="0" id="inputCostPrice" class="form-input" placeholder="例如：62000 或 480" required>
+            </div>
+          </div>
+
+          <!-- 編輯時可手動指定現價 -->
+          <div id="manualPriceGroup" class="form-group" style="display:none;">
+            <label class="form-label" for="inputManualPrice">即時現價覆蓋 (USD，選填)</label>
+            <input type="number" step="any" min="0" id="inputManualPrice" class="form-input" placeholder="留空則自動爬取網路行情">
+            <div class="form-helper">若無法連線或想手動鎖定價格，可在此直接修改。</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inputNotes">心定備註 / 投資初衷</label>
+            <input type="text" id="inputNotes" class="form-input" placeholder="例如：長期持有五年、定期定額標的">
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-zen-outline btn-close-modal">取消</button>
+          <button type="submit" class="btn-zen">儲存標的</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 模態視窗 2：資料管理與設定 (Data & Settings Modal) -->
+  <!-- ========================================================================= -->
+  <div id="modalData" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">資料管理與設定</h3>
+        <button class="icon-btn btn-close-modal" title="關閉">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- 本地備份與還原 -->
+        <div style="margin-bottom:24px;">
+          <h4 style="font-size:14px; font-weight:600; margin-bottom:8px; color:var(--ink-900);">📦 本地資料備份與還原</h4>
+          <p style="font-size:12px; color:var(--ink-500); margin-bottom:12px;">
+            您的資產數據完全儲存在瀏覽器本機。建議定期匯出 JSON 備份檔，以防清除瀏覽器快取時遺失。
+          </p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="btnExportBackup" type="button" class="btn-zen-outline">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              匯出 JSON 備份
+            </button>
+            <label class="btn-zen-outline" style="cursor:pointer;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              匯入 JSON 還原
+              <input type="file" id="inputImportFile" accept=".json" style="display:none;">
+            </label>
+          </div>
+        </div>
+
+        <hr style="border:none; border-top:1px solid var(--card-border); margin:20px 0;">
+
+        <!-- 行情爬取設定 -->
+        <div style="margin-bottom:20px;">
+          <h4 style="font-size:14px; font-weight:600; margin-bottom:12px; color:var(--ink-900);">⚙️ 行情與更新偏好</h4>
+          
+          <div class="form-group">
+            <label class="form-label" for="settingRefreshInterval">自動行情刷新頻率</label>
+            <select id="settingRefreshInterval" class="form-select">
+              <option value="0">手動刷新（靜心專注，不自動輪詢）</option>
+              <option value="30">每 30 秒（快速）</option>
+              <option value="60" selected>每 1 分鐘（推薦）</option>
+              <option value="300">每 5 分鐘（節能）</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="settingFinnhubKey">Finnhub API Key (選填)</label>
+            <input type="text" id="settingFinnhubKey" class="form-input" placeholder="選填，留空則使用公開 Yahoo/Binance 報價">
+            <div class="form-helper">若您有免費的 Finnhub.io API Key，填入可享有更穩定的美股官方即時報價。</div>
+          </div>
+        </div>
+
+        <hr style="border:none; border-top:1px solid var(--card-border); margin:20px 0;">
+
+        <!-- 示範資料重置 -->
+        <div>
+          <h4 style="font-size:14px; font-weight:600; margin-bottom:8px; color:var(--ink-900);">🎋 示範資產重置</h4>
+          <p style="font-size:12px; color:var(--ink-500); margin-bottom:10px;">
+            一鍵將目前持倉還原至經典的「BTC + VOO + QQQ + NVDA + AAPL」示範組合。
+          </p>
+          <button id="btnResetDemo" type="button" class="btn-zen-outline" style="color:var(--zen-cinnabar); border-color:var(--zen-cinnabar-border);">
+            恢復預設禪意組合
+          </button>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-zen-outline btn-close-modal">關閉</button>
+        <button id="btnSaveSettings" type="button" class="btn-zen">儲存設定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 訊息提示容器 -->
+  <div id="toastContainer" class="zen-toast-container"></div>
+
+  <!-- 模組腳本載入 (純原生 Vanilla JS，零框架依賴) -->
+  <script src="js/market-status.js"></script>
+  <script src="js/price-service.js"></script>
+  <script src="js/portfolio-chart.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
