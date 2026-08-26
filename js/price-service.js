@@ -158,7 +158,7 @@ const PriceService = {
    */
   async fetchStockPrices(stockList, options = {}) {
     const symbols = [...new Set(stockList.map(item => item.symbol.toUpperCase()))];
-    const finnhubKey = options.finnhubKey || localStorage.getItem('zenhold_finnhub_key') || '';
+    const finnhubKey = options.finnhubKey || localStorage.getItem('zenhold_finnhub_key') || 'da7f8npr01qj8fm6l88gda7f8npr01qj8fm6l890';
 
     for (const sym of symbols) {
       let fetched = false;

@@ -201,9 +201,9 @@ const StorageService = {
   getSettings() {
     try {
       const s = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      return s ? JSON.parse(s) : { refreshInterval: 60, finnhubKey: '' };
+      return s ? JSON.parse(s) : { refreshInterval: 60, finnhubKey: 'da7f8npr01qj8fm6l88gda7f8npr01qj8fm6l890' };
     } catch (e) {
-      return { refreshInterval: 60, finnhubKey: '' };
+      return { refreshInterval: 60, finnhubKey: 'da7f8npr01qj8fm6l88gda7f8npr01qj8fm6l890' };
     }
   },
 
