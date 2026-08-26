@@ -3,10 +3,12 @@
  * ZenHold - 即時市場行情爬蟲與報價服務 (Price Service)
  * ============================================================================
  * 支援多來源加密貨幣與美股/ETF行情獲取：
- * 1. 加密貨幣：Binance 24hr Ticker API & CoinGecko 公開報價 API (免金鑰、高頻率)
- * 2. 美股與 ETF：Yahoo Finance Chart API / CORS 代理 / Finnhub API (可選填金鑰)
+ * 1. 加密貨幣：Binance 24hr Ticker API & CoinGecko 公開報價 API (免金鑰、秒級高頻)
+ * 2. 美股與 ETF：Finnhub 官方即時 API (已內建官方金鑰) + Yahoo Finance 備援
  * 3. 智慧快取與降級保底機制，確保離線或網路異常時依然保持介面平穩
  */
+
+const DEFAULT_FINNHUB_KEY = 'da7f8npr01qj8fm6l88gda7f8npr01qj8fm6l890';
 
 const CRYPTO_COINGECKO_MAP = {
   'BTC': 'bitcoin',
@@ -61,7 +63,7 @@ const PriceService = {
   },
 
   /**
-   * 批次更新所有持倉標的之行情
+   * 批次並行更新所有持倉標的之行情
    * @param {Array} holdings 持倉清單
    * @param {Object} options 設定選項（如 finnhubKey 等）
    * @returns {Promise<Object>} 回傳各標的最新價格物件
@@ -88,12 +90,12 @@ const PriceService = {
   },
 
   /**
-   * 抓取加密貨幣即時報價 (優先嘗試 Binance，備選 CoinGecko)
+   * 抓取加密貨幣即時報價 (並行非同步，優先 Binance，備選 CoinGecko)
    */
   async fetchCryptoPrices(cryptoList) {
     const symbols = [...new Set(cryptoList.map(item => item.symbol.toUpperCase()))];
 
-    for (const sym of symbols) {
+    const tasks = symbols.map(async (sym) => {
       let fetched = false;
 
       // 1. 優先嘗試 Binance Public 24hr API (無 CORS 限制、更新速度極快)
@@ -149,31 +151,36 @@ const PriceService = {
           // CoinGecko 失敗
         }
       }
-    }
+    });
+
+    await Promise.allSettled(tasks);
   },
 
   /**
-   * 抓取美股與 ETF 即時行情
-   * 支援 Yahoo Finance、公開 CORS Proxy、與自訂 Finnhub API Key
+   * 抓取美股與 ETF 即時行情 (並行非同步)
+   * 支援 Finnhub 官方即時 API (已內建金鑰) + Yahoo Finance 備援
    */
   async fetchStockPrices(stockList, options = {}) {
     const symbols = [...new Set(stockList.map(item => item.symbol.toUpperCase()))];
-    const finnhubKey = options.finnhubKey || localStorage.getItem('zenhold_finnhub_key') || 'da7f8npr01qj8fm6l88gda7f8npr01qj8fm6l890';
+    let finnhubKey = options.finnhubKey;
+    if (!finnhubKey || finnhubKey.trim() === '') {
+      finnhubKey = DEFAULT_FINNHUB_KEY;
+    }
 
-    for (const sym of symbols) {
+    const tasks = symbols.map(async (sym) => {
       let fetched = false;
 
-      // 1. 若使用者有提供 Finnhub Key，優先使用 Finnhub 官方即時 API
+      // 1. 優先使用 Finnhub 官方即時 API
       if (finnhubKey) {
         try {
-          const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${finnhubKey}`);
+          const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${finnhubKey}`);
           if (res.ok) {
             const data = await res.json();
             if (data && data.c && data.c > 0) {
               const currentPrice = data.c;
               const prevClose = data.pc || currentPrice;
-              const changeVal = data.d || (currentPrice - prevClose);
-              const changePct = data.dp || ((changeVal / prevClose) * 100);
+              const changeVal = (data.d !== null && data.d !== undefined) ? data.d : (currentPrice - prevClose);
+              const changePct = (data.dp !== null && data.dp !== undefined) ? data.dp : (prevClose > 0 ? ((changeVal / prevClose) * 100) : 0);
 
               this.cache[sym] = {
                 price: currentPrice,
@@ -186,19 +193,18 @@ const PriceService = {
             }
           }
         } catch (e) {
-          // Finnhub 連線失敗
+          console.warn(`Finnhub API 抓取 ${sym} 失敗:`, e);
         }
       }
 
-      // 2. 透過 Yahoo Finance 公開 Chart API 抓取最新股價 (附帶可靠的 AllOrigins 代理)
+      // 2. 備用管道：透過 Yahoo Finance 公開 Chart API
       if (!fetched) {
         try {
           const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=2d`;
-          // 透過 allorigins 公開代理繞過瀏覽器 CORS
           const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
           
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 4000); // 4秒逾時保護
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
           
           const res = await fetch(proxyUrl, { signal: controller.signal });
           clearTimeout(timeoutId);
@@ -227,13 +233,12 @@ const PriceService = {
             }
           }
         } catch (e) {
-          // Yahoo Finance 抓取逾時或失敗
+          // Yahoo Finance 失敗
         }
       }
 
-      // 3. 備援保底：若無網路或外部 API 均無法回應，但使用者有手動輸入成本或歷史快取，保留既有數值
+      // 3. 備援保底：若無網路或外部 API 均無法回應，保留既有數值
       if (!fetched && !this.cache[sym]) {
-        // 從持倉列表中查找使用者的購買成本作為基礎參考
         const item = stockList.find(i => i.symbol.toUpperCase() === sym);
         if (item && item.costPrice > 0) {
           this.cache[sym] = {
@@ -241,11 +246,13 @@ const PriceService = {
             change24h: 0,
             change24hPct: 0,
             lastUpdated: Date.now(),
-            source: '手動/成本基準'
+            source: '成本基準'
           };
         }
       }
-    }
+    });
+
+    await Promise.allSettled(tasks);
   },
 
   /**

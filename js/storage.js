@@ -6,6 +6,8 @@
  * 完全存放於瀏覽器 localStorage，保護投資隱私與資產安全。
  */
 
+const DEFAULT_GLOBAL_FINNHUB_KEY = 'da7f8npr01qj8fm6l88gda7f8npr01qj8fm6l890';
+
 const STORAGE_KEYS = {
   HOLDINGS: 'zenhold_holdings_data',
   SETTINGS: 'zenhold_user_settings',
@@ -196,14 +198,22 @@ const StorageService = {
   },
 
   /**
-   * 讀取使用者設定
+   * 讀取使用者設定 (自動修補空金鑰)
    */
   getSettings() {
     try {
       const s = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      return s ? JSON.parse(s) : { refreshInterval: 60, finnhubKey: 'da7f8npr01qj8fm6l88gda7f8npr01qj8fm6l890' };
+      let parsed = s ? JSON.parse(s) : {};
+      if (!parsed.finnhubKey || parsed.finnhubKey.trim() === '') {
+        parsed.finnhubKey = DEFAULT_GLOBAL_FINNHUB_KEY;
+        this.saveSettings(parsed);
+      }
+      return {
+        refreshInterval: parsed.refreshInterval || 60,
+        finnhubKey: parsed.finnhubKey
+      };
     } catch (e) {
-      return { refreshInterval: 60, finnhubKey: 'da7f8npr01qj8fm6l88gda7f8npr01qj8fm6l890' };
+      return { refreshInterval: 60, finnhubKey: DEFAULT_GLOBAL_FINNHUB_KEY };
     }
   },
 

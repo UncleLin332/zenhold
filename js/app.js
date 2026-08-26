@@ -553,7 +553,7 @@ const App = {
     this.showModal('modalHolding');
   },
 
-  saveHoldingForm() {
+  async saveHoldingForm() {
     const id = document.getElementById('inputHoldingId').value;
     const category = document.getElementById('selectCategory').value;
     const symbol = document.getElementById('inputSymbol').value.toUpperCase().trim();
@@ -588,7 +588,7 @@ const App = {
     this.holdings = StorageService.getHoldings();
     this.closeAllModals();
     this.renderAll();
-    this.refreshPrices();
+    await this.refreshPrices();
   },
 
   deleteHolding(id) {
