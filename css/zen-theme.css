@@ -1042,14 +1042,19 @@ body {
   gap: 4px;
   margin-top: 4px;
   padding: 2px 8px;
-  background-color: var(--bg-subtle);
+  background-color: var(--bg-canvas);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-pill);
   font-size: 11px;
-  color: var(--ink-700);
+  color: var(--ink-500);
   cursor: pointer;
   width: fit-content;
   transition: var(--transition-fast);
+  font-family: var(--font-sans);
+  line-height: 1.4;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .asset-journal-badge:hover {
