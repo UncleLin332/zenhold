@@ -2,7 +2,14 @@
 
 > **「靜水流深，持盈保泰。心安，則萬物自適。」**
 
-ZenHold 是一個專為持有 **比特幣 (BTC)、加密貨幣、美股個股與美股 ETF** 的長期投資者量身打造的極簡禪意資產管理工具。採用純前端架構（HTML5 + CSS3 + 原生 JavaScript），零依賴、無後端、資料 100% 留存在使用者本機瀏覽器。
+[![Live Demo](https://img.shields.io/badge/線上立即使用-Live%20Demo-2b7a4b?style=for-the-badge&logo=google-chrome&logoColor=white)](https://unclelin332.github.io/zenhold/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+
+🌐 **線上免安裝直接使用網址**：👉 **[https://unclelin332.github.io/zenhold/](https://unclelin332.github.io/zenhold/)**
+
+ZenHold 是一個專為持有 **比特幣 (BTC)、加密貨幣、美股個股與美股 ETF** 的長期投資者量身打造的極簡禪意資產管理工具。採用純前端架構（HTML5 + CSS3 + 原生 JavaScript），零依賴、無後端、資料 100% 留存在使用者本機瀏覽器中。
+
+> 💡 **任何人點擊上方網址皆可獨立使用**：所有數據皆獨立儲存在每位使用者的瀏覽器本機 (`localStorage`)，無須註冊登入，保護個人隱私不外洩。
 
 ---
 
@@ -29,8 +36,7 @@ ZenHold 是一個專為持有 **比特幣 (BTC)、加密貨幣、美股個股與
 
 5. **多管道即時行情爬蟲 (Price Service)**
    - **加密貨幣**：直連 Binance Public 24hr API & CoinGecko 公開 API，無需 API Key 即可獲取秒級即時價格與 24h 漲跌。
-   - **美股與 ETF**：透過 Yahoo Finance 公開 Chart API / 備用代理即時更新。
-   - **進階設定**：支援選填免費的 Finnhub API Key 以獲取官方直連報價。
+   - **美股與 ETF**：內建 Finnhub 官方即時 API + Yahoo Finance 公開 Chart API 備援。
    - **離線智慧快取與手動覆蓋**：斷網或 API 異常時平穩顯示快取，並支援手動指定價格。
 
 6. **本機儲存與安全備份 (Local Storage)**
@@ -59,15 +65,11 @@ Stock/
 
 ## 🚀 如何使用
 
-1. **直接開啟**：
-   - 在電腦上直接雙擊 `index.html` 即可在任一現代瀏覽器（Chrome, Safari, Edge, Firefox）中開啟使用。
-2. **或使用本機靜態伺服器**：
-   ```bash
-   # 若您有 Node.js
-   npx serve .
-   # 或使用 Python
-   python3 -m http.server 8000
-   ```
+1. **線上直接使用（最推薦）**：
+   - 直接前往 [https://unclelin332.github.io/zenhold/](https://unclelin332.github.io/zenhold/) 開啟。
+   - 手機可點選瀏覽器選單中的「加入主畫面 (Add to Home Screen)」，即可享有 App 般的使用體驗。
+2. **本機直接開啟**：
+   - 下載本專案後，直接雙擊 `index.html` 即可在任一現代瀏覽器中開啟使用。
 3. **新增持倉**：
    - 點擊右上角「**+ 新增標的**」，可點擊常用標的（如 BTC, VOO, QQQ, NVDA, AAPL 等），輸入持有數量與買入均價。
 4. **隨時定心**：
