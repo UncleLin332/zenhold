@@ -391,14 +391,106 @@
     </div>
   </div>
 
+  <!-- ========================================================================= -->
+  <!-- 模態視窗 3：投資心境手札 · 觀心覆盤時間軸 (Journal Modal) -->
+  <!-- ========================================================================= -->
+  <div id="modalJournal" class="modal-overlay">
+    <div class="modal-card journal-modal-card">
+      <div class="modal-header">
+        <h3 id="modalJournalTitle" class="modal-title">📖 投資心境手札 · 觀心覆盤</h3>
+        <button class="icon-btn btn-close-modal" title="關閉">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- 標的摘要橫幅 -->
+        <div class="journal-summary-banner">
+          <div>
+            <div id="journalAssetSymbol" class="journal-asset-title">BTC · Bitcoin</div>
+            <div id="journalAssetCost" style="font-size:12px; color:var(--ink-500); margin-top:2px;">買入均價：$62,500.00</div>
+          </div>
+          <div class="journal-asset-stats">
+            <div>
+              <div style="font-size:11px; color:var(--ink-500);">即時現價</div>
+              <div id="journalAssetPrice" style="font-weight:600; color:var(--ink-900);">$78,489.90</div>
+            </div>
+            <div>
+              <div style="font-size:11px; color:var(--ink-500);">未實現損益</div>
+              <div id="journalAssetPnL" class="pnl-positive" style="font-weight:600;">+25.58%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 新增手札區塊 -->
+        <form id="formAddJournal" class="journal-add-box">
+          <input type="hidden" id="journalHoldingId">
+          <div class="journal-tag-pills">
+            <label class="tag-radio-label">
+              <input type="radio" name="journalTag" value="初衷信念" checked>
+              <span class="tag-pill-btn">🎋 初衷信念</span>
+            </label>
+            <label class="tag-radio-label">
+              <input type="radio" name="journalTag" value="波動定心">
+              <span class="tag-pill-btn">🧘 波動定心</span>
+            </label>
+            <label class="tag-radio-label">
+              <input type="radio" name="journalTag" value="加倉觀點">
+              <span class="tag-pill-btn">📈 加倉觀點</span>
+            </label>
+            <label class="tag-radio-label">
+              <input type="radio" name="journalTag" value="財報覆盤">
+              <span class="tag-pill-btn">📊 財報覆盤</span>
+            </label>
+            <label class="tag-radio-label">
+              <input type="radio" name="journalTag" value="策略隨筆">
+              <span class="tag-pill-btn">✍️ 策略隨筆</span>
+            </label>
+          </div>
+
+          <textarea id="journalContent" class="journal-textarea" placeholder="記錄當下的思考：為什麼在此時買入/持有？對未來的看法是什麼？面對市場情緒的心境如何？..." required></textarea>
+
+          <div class="journal-form-bottom">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:12px; color:var(--ink-500);">手札日期：</span>
+              <input type="date" id="journalDate" class="journal-date-input" required>
+            </div>
+            <button type="submit" class="btn-zen" style="padding:6px 16px; font-size:12px;">
+              + 寫入手札
+            </button>
+          </div>
+        </form>
+
+        <!-- 時間軸歷史紀錄區塊 -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h4 style="font-family:var(--font-serif); font-size:14px; font-weight:600; color:var(--ink-900);">
+              📜 時光心境脈絡
+            </h4>
+            <span id="journalCountBadge" style="font-size:12px; color:var(--ink-500);">共 0 則手札</span>
+          </div>
+
+          <div id="journalTimeline" class="zen-timeline">
+            <!-- 動態渲染時間軸卡片 -->
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-zen-outline btn-close-modal">完成並關閉</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast 訊息提示容器 -->
   <div id="toastContainer" class="zen-toast-container"></div>
 
   <!-- 模組腳本載入 (純原生 Vanilla JS，零框架依賴) -->
-  <script src="js/market-status.js?v=1.2"></script>
-  <script src="js/price-service.js?v=1.2"></script>
-  <script src="js/portfolio-chart.js?v=1.2"></script>
-  <script src="js/storage.js?v=1.2"></script>
-  <script src="js/app.js?v=1.2"></script>
+  <script src="js/market-status.js?v=1.3"></script>
+  <script src="js/price-service.js?v=1.3"></script>
+  <script src="js/portfolio-chart.js?v=1.3"></script>
+  <script src="js/storage.js?v=1.3"></script>
+  <script src="js/app.js?v=1.3"></script>
 </body>
 </html>

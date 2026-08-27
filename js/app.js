@@ -2,7 +2,7 @@
  * ============================================================================
  * ZenHold - 主應用程式核心控制器 (App Controller)
  * ============================================================================
- * 整合市場狀態、定心禪語、即時行情爬蟲、資產配置圓餅圖、持倉明細與模態互動
+ * 整合市場狀態、定心禪語、即時行情爬蟲、資產配置圓餅圖、持倉明細、時光手札與模態互動
  */
 
 // 精選「定心禪語」金句庫 —— 提醒投資者戒除焦躁與市場情緒干擾
@@ -23,6 +23,7 @@ const App = {
   refreshTimer: null,
   isRefreshing: false,
   editingId: null,
+  activeJournalHoldingId: null,
 
   /**
    * 應用程式啟動初始化
@@ -104,7 +105,6 @@ const App = {
     if (this.isRefreshing) return;
     this.isRefreshing = true;
 
-    const refreshBtn = document.getElementById('btnRefreshAll');
     const refreshIcon = document.getElementById('refreshIcon');
     if (refreshIcon) refreshIcon.style.animation = 'spin 1s linear infinite';
 
@@ -249,7 +249,7 @@ const App = {
   },
 
   /**
-   * 渲染持倉明細表格
+   * 渲染持倉明細表格 (包含時光手札徽章與連結)
    */
   renderHoldingsTable() {
     const tbody = document.getElementById('holdingsTableBody');
@@ -311,14 +311,21 @@ const App = {
         badgeText = 'ETF';
       }
 
+      // 手札筆記數量
+      const journalCount = (h.journal && Array.isArray(h.journal)) ? h.journal.length : 0;
+      const journalBadgeText = journalCount > 0 ? `📖 ${journalCount} 則手札` : `📝 寫心境手札`;
+
       return `
         <tr data-id="${h.id}">
           <td>
             <div class="asset-cell">
               <span class="asset-icon-badge ${badgeClass}">${badgeText}</span>
               <div class="asset-details">
-                <span class="asset-symbol">${h.symbol}</span>
-                <span class="asset-name" title="${h.notes || ''}">${h.name || h.symbol}</span>
+                <span class="asset-symbol" style="cursor:pointer;" onclick="App.openJournalModal('${h.id}')">${h.symbol}</span>
+                <span class="asset-name" style="cursor:pointer;" onclick="App.openJournalModal('${h.id}')" title="${h.notes || ''}">${h.name || h.symbol}</span>
+                <button class="asset-journal-badge" title="點擊展開投資心境與觀心覆盤手札" onclick="App.openJournalModal('${h.id}')">
+                  ${journalBadgeText}
+                </button>
               </div>
             </div>
           </td>
@@ -336,6 +343,9 @@ const App = {
           <td class="num-cell" style="color:var(--ink-700);">${weightPct.toFixed(1)}%</td>
           <td>
             <div class="action-btns">
+              <button class="icon-btn" title="查看投資心境手札" onclick="App.openJournalModal('${h.id}')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              </button>
               <button class="icon-btn btn-edit" title="編輯持倉" onclick="App.openEditModal('${h.id}')">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
               </button>
@@ -435,6 +445,15 @@ const App = {
       });
     }
 
+    // 表單提交：新增心境手札
+    const formAddJournal = document.getElementById('formAddJournal');
+    if (formAddJournal) {
+      formAddJournal.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.submitNewJournalEntry();
+      });
+    }
+
     // 快速推薦標的標籤點擊
     const suggestPills = document.querySelectorAll('.suggest-pill');
     suggestPills.forEach(pill => {
@@ -515,6 +534,154 @@ const App = {
         this.closeAllModals();
         this.showToast('設定已成功儲存');
       });
+    }
+  },
+
+  /**
+   * 開啟投資心境手札模態視窗
+   */
+  openJournalModal(holdingId) {
+    const item = this.holdings.find(h => h.id === holdingId);
+    if (!item) return;
+
+    this.activeJournalHoldingId = holdingId;
+
+    // 填寫頂部摘要資訊
+    const pData = PriceService.getPrice(item.symbol);
+    const curPrice = pData?.price || item.costPrice || 0;
+    const costPrice = parseFloat(item.costPrice) || 0;
+    const pnlPct = costPrice > 0 ? ((curPrice - costPrice) / costPrice) * 100 : 0;
+    const sign = pnlPct >= 0 ? '+' : '';
+    const pnlClass = pnlPct >= 0 ? 'pnl-positive' : 'pnl-negative';
+
+    document.getElementById('modalJournalTitle').textContent = `📖 投資心境手札 · ${item.symbol}`;
+    document.getElementById('journalHoldingId').value = item.id;
+    document.getElementById('journalAssetSymbol').textContent = `${item.symbol} · ${item.name || item.symbol}`;
+    document.getElementById('journalAssetCost').textContent = `買入均價：$${costPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    document.getElementById('journalAssetPrice').textContent = `$${curPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    
+    const pnlEl = document.getElementById('journalAssetPnL');
+    if (pnlEl) {
+      pnlEl.className = pnlClass;
+      pnlEl.textContent = `${sign}${pnlPct.toFixed(2)}%`;
+    }
+
+    // 重設輸入框並預設今日日期
+    document.getElementById('journalContent').value = '';
+    document.getElementById('journalDate').value = new Date().toISOString().slice(0, 10);
+
+    // 渲染手札時間軸
+    this.renderJournalTimeline(item);
+
+    this.showModal('modalJournal');
+  },
+
+  /**
+   * 渲染時間軸列表
+   */
+  renderJournalTimeline(holding) {
+    const timelineEl = document.getElementById('journalTimeline');
+    const badgeEl = document.getElementById('journalCountBadge');
+    if (!timelineEl) return;
+
+    const list = holding.journal || [];
+    if (badgeEl) badgeEl.textContent = `共 ${list.length} 則時光手札`;
+
+    if (list.length === 0) {
+      timelineEl.innerHTML = `
+        <div style="padding: 24px 16px; text-align: center; color: var(--ink-500); background-color: var(--bg-canvas); border-radius: var(--radius-md); border: 1px dashed var(--card-border);">
+          <div style="font-family: var(--font-serif); font-size: 14px; margin-bottom: 6px;">「初心若磐，歲月不負」</div>
+          <div style="font-size: 12px;">尚未記錄心境手札，立即在上方寫下您買入與持有的核心理由吧！</div>
+        </div>
+      `;
+      return;
+    }
+
+    // 依日期時間倒序排列
+    const sorted = [...list].sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.timestamp || 0) - (a.timestamp || 0));
+
+    timelineEl.innerHTML = sorted.map((entry) => {
+      let tagClass = 'tag-mindset';
+      if (entry.tag === '初衷信念') tagClass = 'tag-thesis';
+      else if (entry.tag === '加倉觀點') tagClass = 'tag-accumulate';
+      else if (entry.tag === '財報覆盤') tagClass = 'tag-review';
+      else if (entry.tag === '波動定心') tagClass = 'tag-mindset';
+
+      return `
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-card">
+            <div class="timeline-card-header">
+              <div class="timeline-date-wrap">
+                <span class="timeline-date">🗓️ ${entry.date || '未知日期'}</span>
+                <span class="timeline-tag ${tagClass}">${entry.tag || '心態手札'}</span>
+              </div>
+              <button class="icon-btn btn-delete" title="刪除此則手札" onclick="App.deleteJournalEntry('${holding.id}', '${entry.id}')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
+            <div class="timeline-content">${escapeHTML(entry.content)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  /**
+   * 提交新增一則心境手札
+   */
+  submitNewJournalEntry() {
+    const holdingId = document.getElementById('journalHoldingId').value;
+    const content = document.getElementById('journalContent').value.trim();
+    const date = document.getElementById('journalDate').value || new Date().toISOString().slice(0, 10);
+    
+    // 取得選取的標籤
+    const tagRadios = document.getElementsByName('journalTag');
+    let selectedTag = '初衷信念';
+    for (const r of tagRadios) {
+      if (r.checked) {
+        selectedTag = r.value;
+        break;
+      }
+    }
+
+    if (!content) {
+      alert('請填寫手札內容');
+      return;
+    }
+
+    const newEntry = StorageService.addJournalEntry(holdingId, {
+      tag: selectedTag,
+      date,
+      content
+    });
+
+    if (newEntry) {
+      this.holdings = StorageService.getHoldings();
+      const updatedHolding = this.holdings.find(h => h.id === holdingId);
+      
+      document.getElementById('journalContent').value = '';
+      if (updatedHolding) {
+        this.renderJournalTimeline(updatedHolding);
+      }
+      this.renderHoldingsTable();
+      this.showToast('已寫入一則時光心境手札');
+    }
+  },
+
+  /**
+   * 刪除一則手札
+   */
+  deleteJournalEntry(holdingId, journalId) {
+    if (confirm('確定要刪除這則歷史手札嗎？')) {
+      StorageService.deleteJournalEntry(holdingId, journalId);
+      this.holdings = StorageService.getHoldings();
+      const updatedHolding = this.holdings.find(h => h.id === holdingId);
+      if (updatedHolding) {
+        this.renderJournalTimeline(updatedHolding);
+      }
+      this.renderHoldingsTable();
+      this.showToast('已刪除該筆手札');
     }
   },
 
@@ -647,6 +814,19 @@ const App = {
     }, 2400);
   }
 };
+
+function escapeHTML(str) {
+  if (!str) return '';
+  return str.replace(/[&<>'"]/g, 
+    tag => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[tag] || tag)
+  );
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   App.init();

@@ -1031,3 +1031,258 @@ body {
     align-items: flex-start;
   }
 }
+
+/* ==========================================================================
+   投資心境手札與歷史時間軸 (Investment Journal & Zen Timeline)
+   ========================================================================== */
+
+.asset-journal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 2px 8px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  color: var(--ink-700);
+  cursor: pointer;
+  width: fit-content;
+  transition: var(--transition-fast);
+}
+
+.asset-journal-badge:hover {
+  background-color: var(--ink-900);
+  color: var(--bg-canvas);
+  border-color: var(--ink-900);
+}
+
+/* 手札彈窗內部佈局 */
+.journal-modal-card {
+  max-width: 680px !important;
+}
+
+.journal-summary-banner {
+  background-color: var(--bg-canvas);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.journal-asset-title {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.journal-asset-stats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+/* 新增手札區塊 */
+.journal-add-box {
+  background-color: #faf9f6;
+  border: 1px dashed var(--card-border-focus);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.journal-tag-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.tag-radio-label {
+  cursor: pointer;
+}
+
+.tag-radio-label input {
+  display: none;
+}
+
+.tag-pill-btn {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  border: 1px solid var(--card-border);
+  background-color: var(--card-bg);
+  color: var(--ink-700);
+  transition: var(--transition-fast);
+}
+
+.tag-radio-label input:checked + .tag-pill-btn {
+  background-color: var(--ink-900);
+  color: var(--bg-canvas);
+  border-color: var(--ink-900);
+  font-weight: 500;
+}
+
+.journal-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-900);
+  background-color: var(--card-bg);
+  resize: vertical;
+  margin-bottom: 10px;
+}
+
+.journal-textarea:focus {
+  outline: none;
+  border-color: var(--ink-900);
+}
+
+.journal-form-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.journal-date-input {
+  padding: 6px 10px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--ink-900);
+  background-color: var(--card-bg);
+}
+
+/* 禪意時間軸 (Zen Timeline) */
+.zen-timeline {
+  position: relative;
+  padding-left: 24px;
+}
+
+.zen-timeline::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  bottom: 12px;
+  left: 7px;
+  width: 2px;
+  background-color: var(--card-border);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -24px;
+  top: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--card-bg);
+  border: 3px solid var(--ink-700);
+  z-index: 2;
+}
+
+.timeline-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-smooth);
+}
+
+.timeline-card:hover {
+  border-color: var(--card-border-focus);
+  box-shadow: var(--shadow-md);
+}
+
+.timeline-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.timeline-date-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timeline-date {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-500);
+  font-weight: 500;
+}
+
+.timeline-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+}
+
+.tag-thesis {
+  background-color: var(--zen-bamboo-bg);
+  color: var(--zen-bamboo);
+  border: 1px solid var(--zen-bamboo-border);
+}
+
+.tag-mindset {
+  background-color: #f3eff7;
+  color: #674e6e;
+  border: 1px solid #ded5e3;
+}
+
+.tag-accumulate {
+  background-color: var(--zen-amber-bg);
+  color: var(--zen-amber);
+  border: 1px solid var(--zen-amber-border);
+}
+
+.tag-review {
+  background-color: var(--zen-indigo-bg);
+  color: var(--zen-indigo);
+  border: 1px solid var(--zen-indigo-border);
+}
+
+.timeline-content {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink-900);
+  white-space: pre-wrap;
+}
+
+.timeline-actions {
+  display: flex;
+  gap: 6px;
+}
+
