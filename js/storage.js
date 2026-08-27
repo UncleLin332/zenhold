@@ -129,20 +129,22 @@ const StorageService = {
       const list = JSON.parse(data);
       let needsSave = false;
 
-      // 檢查並自動平滑遷移：確保每個 holding 都有 journal 陣列
+      // 檢查並自動平滑遷移：確保每個 holding 都有 journal 陣列，且若 notes 存在但手札為空，自動填入第一筆初衷手札
       list.forEach(h => {
         if (!h.journal || !Array.isArray(h.journal)) {
           h.journal = [];
-          if (h.notes && h.notes.trim() !== '') {
-            const today = new Date().toISOString().slice(0, 10);
-            h.journal.push({
-              id: 'jnl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-              date: h.createdAt ? new Date(h.createdAt).toISOString().slice(0, 10) : today,
-              timestamp: h.createdAt || Date.now(),
-              tag: '初衷信念',
-              content: h.notes
-            });
-          }
+          needsSave = true;
+        }
+
+        if (h.notes && h.notes.trim() !== '' && h.journal.length === 0) {
+          const today = new Date().toISOString().slice(0, 10);
+          h.journal.push({
+            id: 'jnl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            date: h.createdAt ? new Date(h.createdAt).toISOString().slice(0, 10) : today,
+            timestamp: h.createdAt || Date.now(),
+            tag: '初衷信念',
+            content: h.notes.trim()
+          });
           needsSave = true;
         }
       });
@@ -172,7 +174,7 @@ const StorageService = {
   },
 
   /**
-   * 新增持倉標的
+   * 新增持倉標的 (建立時自動將心定備註寫入為第一筆時光手札)
    */
   addHolding(item) {
     const list = this.getHoldings();
@@ -208,19 +210,50 @@ const StorageService = {
   },
 
   /**
-   * 更新既有持倉
+   * 更新既有持倉 (同步更新初衷手札)
    */
   updateHolding(id, updatedFields) {
     const list = this.getHoldings();
     const idx = list.findIndex(h => h.id === id);
     if (idx !== -1) {
+      const existing = list[idx];
+      let journal = updatedFields.journal || existing.journal || [];
+      const newNotes = updatedFields.notes !== undefined ? updatedFields.notes.trim() : (existing.notes || '');
+
+      // 如果有備註且手札為空，自動加入第一筆初衷手札
+      if (newNotes && journal.length === 0) {
+        const today = new Date().toISOString().slice(0, 10);
+        journal.push({
+          id: 'jnl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          date: today,
+          timestamp: Date.now(),
+          tag: '初衷信念',
+          content: newNotes
+        });
+      } else if (newNotes && journal.length > 0 && updatedFields.notes !== undefined) {
+        // 若使用者在編輯時修改了初衷備註，同步更新對應初衷手札
+        const thesisEntry = journal.find(j => j.tag === '初衷信念');
+        if (thesisEntry) {
+          thesisEntry.content = newNotes;
+        } else {
+          journal.unshift({
+            id: 'jnl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            date: new Date().toISOString().slice(0, 10),
+            timestamp: Date.now(),
+            tag: '初衷信念',
+            content: newNotes
+          });
+        }
+      }
+
       list[idx] = {
-        ...list[idx],
+        ...existing,
         ...updatedFields,
-        symbol: (updatedFields.symbol || list[idx].symbol).toUpperCase().trim(),
-        shares: parseFloat(updatedFields.shares !== undefined ? updatedFields.shares : list[idx].shares) || 0,
-        costPrice: parseFloat(updatedFields.costPrice !== undefined ? updatedFields.costPrice : list[idx].costPrice) || 0,
-        journal: updatedFields.journal || list[idx].journal || [],
+        symbol: (updatedFields.symbol || existing.symbol).toUpperCase().trim(),
+        shares: parseFloat(updatedFields.shares !== undefined ? updatedFields.shares : existing.shares) || 0,
+        costPrice: parseFloat(updatedFields.costPrice !== undefined ? updatedFields.costPrice : existing.costPrice) || 0,
+        notes: newNotes,
+        journal: journal,
         updatedAt: Date.now()
       };
       this.saveHoldings(list);

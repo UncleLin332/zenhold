@@ -538,11 +538,24 @@ const App = {
   },
 
   /**
-   * 開啟投資心境手札模態視窗
+   * 開啟投資心境手札模態視窗 (自動確保初衷備註同步顯示為第一篇手札)
    */
   openJournalModal(holdingId) {
-    const item = this.holdings.find(h => h.id === holdingId);
+    let item = this.holdings.find(h => h.id === holdingId);
     if (!item) return;
+
+    // 雙重保證：若有建立時的心定備註但手札目前為空，自動寫入第一筆「初衷信念」手札
+    if (item.notes && item.notes.trim() !== '' && (!item.journal || item.journal.length === 0)) {
+      const today = new Date().toISOString().slice(0, 10);
+      StorageService.addJournalEntry(item.id, {
+        tag: '初衷信念',
+        date: item.createdAt ? new Date(item.createdAt).toISOString().slice(0, 10) : today,
+        content: item.notes.trim()
+      });
+      this.holdings = StorageService.getHoldings();
+      item = this.holdings.find(h => h.id === holdingId);
+      this.renderHoldingsTable();
+    }
 
     this.activeJournalHoldingId = holdingId;
 
